@@ -2,7 +2,6 @@ package realfs
 
 import (
 	"dedup/fs"
-	"dedup/lifecycle"
 	"os"
 	"path/filepath"
 
@@ -11,11 +10,10 @@ import (
 
 type FS struct {
 	root string
-	lc   *lifecycle.Lifecycle
 }
 
-func New(path string, lc *lifecycle.Lifecycle) *FS {
-	return &FS{root: path, lc: lc}
+func New(path string) *FS {
+	return &FS{root: path}
 }
 
 func (fsys *FS) Root() string {

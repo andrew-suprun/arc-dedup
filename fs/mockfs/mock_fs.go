@@ -3,7 +3,6 @@ package mockfs
 import (
 	"cmp"
 	"dedup/fs"
-	"dedup/lifecycle"
 	"encoding/csv"
 	"os"
 	"slices"
@@ -13,11 +12,10 @@ import (
 
 type FS struct {
 	root string
-	lc   *lifecycle.Lifecycle
 }
 
-func New(path string, lc *lifecycle.Lifecycle) *FS {
-	return &FS{root: path, lc: lc}
+func New(path string) *FS {
+	return &FS{root: path}
 }
 
 func (fsys *FS) Root() string {
@@ -48,7 +46,7 @@ func (fsys *FS) scan(events fs.Events) {
 	events.Send(fs.ArchiveHashed{})
 }
 
-func readMetas() []fs.FileMeta {
+func readMetas() fs.FileMetas {
 	result := []fs.FileMeta{}
 	hashInfoFile, err := os.Open("data/.meta.csv")
 	if err != nil {

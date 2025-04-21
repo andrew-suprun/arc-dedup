@@ -7,27 +7,23 @@ import (
 	"time"
 
 	"dedup/fs"
-	"dedup/lifecycle"
 )
 
 type (
 	app struct {
-		lc *lifecycle.Lifecycle
-
 		fs          fs.FS
-		rootPath    string
 		rootFolder  *file
 		curFolder   *file
-		state       state
 		nDuplicates int
 		hashing     int
 		hashed      int
+		state       appState
 
+		folderTargets []folderTarget
+		sortTargets   []sortTarget
 		screenWidth   int
 		screenHeight  int
 		lastClickTime time.Time
-		lastX         int
-		lastY         int
 
 		makeSelectedVisible bool
 		sync                bool
@@ -58,8 +54,8 @@ type (
 		sorted        bool
 	}
 
-	state      int
-	fileState  int
+	appState int
+
 	sortColumn int
 
 	folderTarget struct {
@@ -76,19 +72,9 @@ type (
 )
 
 const (
-	archiveStarted state = iota
-	archiveScanned
-	archiveHashed
-)
-
-const (
-	scanned fileState = iota
-	hashed
-	pending
-	copying
-	copied
-	duplicate
-	divergent
+	archiveScanning appState = iota
+	archiveHashing
+	archiveReady
 )
 
 const (
@@ -125,26 +111,6 @@ func (f *file) String() string {
 	}
 	buf.WriteRune('}')
 	return buf.String()
-}
-
-func (s fileState) String() string {
-	switch s {
-	case scanned:
-		return "scanned"
-	case hashed:
-		return "hashed"
-	case pending:
-		return "pending"
-	case copying:
-		return "copying"
-	case copied:
-		return "copied"
-	case duplicate:
-		return "duplicate"
-	case divergent:
-		return "divergent"
-	}
-	panic("Invalid state")
 }
 
 func (f *file) findChild(name string) *file {
@@ -194,6 +160,9 @@ func (parent *file) getChild(sub string) *file {
 		parent.sorted = false
 	}
 	return child
+}
+
+func (app *app) analyze() {
 }
 
 func (app *app) findFile(path []string) *file {
