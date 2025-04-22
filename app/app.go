@@ -77,6 +77,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			incoming.parent = folder
 			folder.sorted = false
 		}
+		app.rootFolder.updateMetas()
 
 	case fs.FileHashed:
 		file := app.findFile(parsePath(msg.Path))
