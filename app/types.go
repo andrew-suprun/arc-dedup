@@ -181,13 +181,14 @@ func (app *app) analyze() {
 }
 
 func (app *app) analyzeRec(byHash map[string][]*file, file *file) {
-	files := byHash[file.hash]
-	files = append(files, file)
-	byHash[file.hash] = files
 	if file.folder != nil {
 		for _, child := range file.children {
 			app.analyzeRec(byHash, child)
 		}
+	} else {
+		files := byHash[file.hash]
+		files = append(files, file)
+		byHash[file.hash] = files
 	}
 }
 
@@ -245,9 +246,6 @@ func (folder *file) updateMetas() {
 			child.updateMetas()
 		}
 		folder.updateMeta(child)
-	}
-	if folder.size == 0 && folder.parent != nil {
-		folder.parent.deleteFile(folder)
 	}
 }
 

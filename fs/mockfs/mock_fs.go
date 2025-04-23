@@ -29,6 +29,7 @@ func (fsys *FS) Scan(events fs.Events) {
 func (fsys *FS) Remove(path string, events fs.Events) {}
 
 func (fsys *FS) scan(events fs.Events) {
+	time.Sleep(time.Second)
 	metas := readMetas()
 	for i := range metas {
 		metas[i].Hash = ""

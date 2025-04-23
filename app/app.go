@@ -77,10 +77,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			folder.children = append(folder.children, incoming)
 			incoming.parent = folder
 			folder.sorted = false
+			if meta.Hash == "" {
+				app.hashing++
+			}
 		}
 		if len(app.rootFolder.children) > 0 {
 			app.rootFolder.selected = app.rootFolder.children[0]
 		}
+		app.rootFolder.updateMetas()
 
 	case fs.FileHashed:
 		file := app.findFile(parsePath(msg.Path))

@@ -65,16 +65,17 @@ func (b *builder) renderBreadcrumbs() {
 }
 
 func (b *builder) renderFolder() {
-	document := "    Document" + b.app.curFolder.sortIndicator(sortByName)
+	document := "     Document" + b.app.curFolder.sortIndicator(sortByName)
 	modified := "Date Modified" + b.app.curFolder.sortIndicator(sortByTime)
 	size := "Size" + b.app.curFolder.sortIndicator(sortBySize)
 	b.setStyle(styleFolderHeader)
 	b.text(padRight(document, b.app.screenWidth-39))
-	b.text(padRight(modified, 19))
-	b.text(padLeft(size, 19))
+	b.text(padRight(modified, 20))
+	b.text(padLeft(size, 18))
 	b.newLine()
 
 	folder := b.app.curFolder
+	b.setStyle(styleFile)
 	for i := range b.app.screenHeight - 4 {
 		if i+folder.offsetIdx >= len(folder.children) {
 			b.newLine()
@@ -108,12 +109,27 @@ func (b *builder) renderFolder() {
 			} else {
 				b.text("▶ ")
 			}
-			b.text(padRight(file.name, b.app.screenWidth-43))
+			b.text(padRight(file.name, b.app.screenWidth-45))
 			b.text(file.modTime.Format(" 2006-01-02 15:04:05"))
 			b.text(formatSize(file.size))
 			b.text(" ")
 			b.newLine()
 		}
+	}
+	b.setStyle(styleArchive)
+	switch b.app.state {
+	case archiveScanning:
+		b.text(" Scanning ")
+		b.text(padRight("", b.app.screenWidth-b.x))
+	case archiveHashing:
+		b.text(" Hashing ")
+		b.setStyle(styleProgressBar)
+		b.text(b.progressBar(b.app.hashed, b.app.hashing, b.app.screenWidth-10))
+		b.setStyle(styleArchive)
+		b.text(" ")
+	case archiveReady:
+		b.text(" All Clear ")
+		b.text(padRight("", b.app.screenWidth-b.x))
 	}
 }
 
@@ -168,6 +184,26 @@ func (b *builder) skipTo(x int) {
 		b.builder.WriteString(b.style.Render(" "))
 		b.x++
 	}
+}
+
+func (b *builder) progressBar(done, size, width int) string {
+	runes := make([]rune, width)
+	value := 0
+	if size > 0 {
+		value = (done*width*8 + size/2) / size
+	}
+	idx := 0
+	for ; idx < value/8; idx++ {
+		runes[idx] = '█'
+	}
+	if value%8 > 0 {
+		runes[idx] = []rune{' ', '▏', '▎', '▍', '▌', '▋', '▊', '▉'}[value%8]
+		idx++
+	}
+	for ; idx < int(width); idx++ {
+		runes[idx] = ' '
+	}
+	return b.style.Render(string(runes))
 }
 
 func (f *folder) sortIndicator(column sortColumn) string {
