@@ -14,6 +14,7 @@ type (
 		fs          fs.FS
 		rootFolder  *file
 		curFolder   *file
+		byHash      map[string][]*file
 		nDuplicates int
 		hashing     int
 		hashed      int
@@ -25,9 +26,6 @@ type (
 		screenHeight  int
 		lastClickTime time.Time
 
-		makeSelectedVisible bool
-		sync                bool
-
 		events events
 	}
 
@@ -37,6 +35,7 @@ type (
 		modTime time.Time
 		hash    string
 		parent  *file
+		dups    int
 		*folder
 	}
 
@@ -45,8 +44,6 @@ type (
 	folder struct {
 		children      files
 		selected      *file
-		nFiles        int
-		nHashed       int
 		selectedIdx   int
 		offsetIdx     int
 		sortColumn    sortColumn
@@ -106,8 +103,8 @@ func (f *file) String() string {
 	if f.hash != "" {
 		fmt.Fprintf(buf, ", hash: %q", f.hash)
 	}
-	if f.folder != nil {
-		fmt.Fprintf(buf, ", nFiles: %d, nHashed: %d", f.nFiles, f.nHashed)
+	if f.dups > 0 {
+		fmt.Fprintf(buf, ", dups: %d", f.dups)
 	}
 	buf.WriteRune('}')
 	return buf.String()
@@ -163,6 +160,35 @@ func (parent *file) getChild(sub string) *file {
 }
 
 func (app *app) analyze() {
+	byHash := map[string][]*file{}
+	app.analyzeRec(byHash, app.rootFolder)
+	dups := map[string]struct{}{}
+	for hash, files := range byHash {
+		if len(files) > 1 {
+			dups[hash] = struct{}{}
+		}
+	}
+	for hash, files := range byHash {
+		if _, ok := dups[hash]; ok {
+			app.byHash[hash] = files
+			for _, file := range files {
+				file.dups = len(files)
+			}
+		}
+	}
+	app.nDuplicates = len(dups)
+	app.rootFolder.updateMetas()
+}
+
+func (app *app) analyzeRec(byHash map[string][]*file, file *file) {
+	files := byHash[file.hash]
+	files = append(files, file)
+	byHash[file.hash] = files
+	if file.folder != nil {
+		for _, child := range file.children {
+			app.analyzeRec(byHash, child)
+		}
+	}
 }
 
 func (app *app) findFile(path []string) *file {
@@ -212,14 +238,11 @@ func (f *file) fullPath() (result []string) {
 func (folder *file) updateMetas() {
 	folder.size = 0
 	folder.modTime = time.Time{}
-	folder.nFiles = 0
-	folder.nHashed = 0
+	folder.dups = 0
 
 	for _, child := range folder.children {
 		if child.folder != nil {
 			child.updateMetas()
-			folder.nFiles += child.nFiles - 1
-			folder.nHashed += child.nHashed
 		}
 		folder.updateMeta(child)
 	}
@@ -230,10 +253,7 @@ func (folder *file) updateMetas() {
 
 func (folder *file) updateMeta(meta *file) {
 	folder.size += meta.size
-	folder.nFiles++
-	if meta.hash != "" {
-		folder.nHashed++
-	}
+	folder.dups += meta.dups
 	if folder.modTime.Before(meta.modTime) {
 		folder.modTime = meta.modTime
 	}

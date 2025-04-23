@@ -2,20 +2,22 @@ package app
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 )
 
 var (
-	styleDefault        = lipgloss.NewStyle().Foreground(lipgloss.Color("17")).Background(lipgloss.Color("250"))
-	styleScreenTooSmall = lipgloss.NewStyle().Foreground(lipgloss.Color("#7D56F4")).Background(lipgloss.Color("9")).Bold(true)
-	styleArchive        = lipgloss.NewStyle().Foreground(lipgloss.Color("226")).Background(lipgloss.Color("0")).Bold(true).Italic(true)
-	styleBreadcrumbs    = lipgloss.NewStyle().Foreground(lipgloss.Color("231")).Background(lipgloss.Color("17")).Bold(true)
-	styleFile           = lipgloss.NewStyle().Foreground(lipgloss.Color("231")).Background(lipgloss.Color("17"))
-	styleFolderHeader   = lipgloss.NewStyle().Foreground(lipgloss.Color("255")).Background(lipgloss.Color("243")).Bold(true)
-	styleProgressBar    = lipgloss.NewStyle().Foreground(lipgloss.Color("231")).Background(lipgloss.Color("33")).Bold(true)
+	styleDefault         = lipgloss.NewStyle().Foreground(lipgloss.Color("17")).Background(lipgloss.Color("250"))
+	styleScreenTooSmall  = lipgloss.NewStyle().Foreground(lipgloss.Color("#7D56F4")).Background(lipgloss.Color("9")).Bold(true)
+	styleArchive         = lipgloss.NewStyle().Foreground(lipgloss.Color("226")).Background(lipgloss.Color("0")).Bold(true).Italic(true)
+	styleBreadcrumbs     = lipgloss.NewStyle().Foreground(lipgloss.Color("231")).Background(lipgloss.Color("17")).Bold(true)
+	styleFile            = lipgloss.NewStyle().Foreground(lipgloss.Color("231")).Background(lipgloss.Color("17"))
+	styleFileDup         = lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Background(lipgloss.Color("17"))
+	styleFileSelected    = lipgloss.NewStyle().Foreground(lipgloss.Color("231")).Background(lipgloss.Color("19"))
+	styleFileDupSelected = lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Background(lipgloss.Color("19"))
+	styleFolderHeader    = lipgloss.NewStyle().Foreground(lipgloss.Color("255")).Background(lipgloss.Color("243")).Bold(true)
+	styleProgressBar     = lipgloss.NewStyle().Foreground(lipgloss.Color("231")).Background(lipgloss.Color("33")).Bold(true)
 )
 
 type builder struct {
@@ -63,7 +65,7 @@ func (b *builder) renderBreadcrumbs() {
 }
 
 func (b *builder) renderFolder() {
-	document := "       Document" + b.app.curFolder.sortIndicator(sortByName)
+	document := "    Document" + b.app.curFolder.sortIndicator(sortByName)
 	modified := "Date Modified" + b.app.curFolder.sortIndicator(sortByTime)
 	size := "Size" + b.app.curFolder.sortIndicator(sortBySize)
 	b.setStyle(styleFolderHeader)
@@ -73,21 +75,40 @@ func (b *builder) renderFolder() {
 	b.newLine()
 
 	folder := b.app.curFolder
-	log.Println(len(folder.children))
-	b.setStyle(styleFile)
 	for i := range b.app.screenHeight - 4 {
 		if i+folder.offsetIdx >= len(folder.children) {
 			b.newLine()
 		} else {
 			file := folder.children[i+folder.offsetIdx]
-			b.text(" 1/3 ")
+			if b.app.curFolder.selected == file {
+				if file.dups > 0 {
+					b.setStyle(styleFileDupSelected)
+				} else {
+					b.setStyle(styleFileSelected)
+				}
+			} else {
+				b.setStyle(styleFile)
+				if file.dups > 0 {
+					b.setStyle(styleFileDup)
+				} else {
+					b.setStyle(styleFile)
+				}
+			}
+			if file.dups > 0 {
+				if file.folder != nil {
+					b.text(" D ")
+				} else {
+					b.text(counter(file.dups))
+				}
+			} else {
+				b.text("   ")
+			}
 			if file.folder == nil {
 				b.text("  ")
 			} else {
 				b.text("▶ ")
 			}
-			b.text(padRight(file.name, b.app.screenWidth-47))
-			log.Printf("%d %#v", i, file)
+			b.text(padRight(file.name, b.app.screenWidth-43))
 			b.text(file.modTime.Format(" 2006-01-02 15:04:05"))
 			b.text(formatSize(file.size))
 			b.text(" ")
@@ -197,4 +218,11 @@ func formatSize(size int) string {
 	}
 	b.WriteString(str[12:])
 	return b.String()
+}
+
+func counter(count int) string {
+	if count > 9 {
+		return " * "
+	}
+	return fmt.Sprintf(" %c ", '0'+count)
 }

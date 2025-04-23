@@ -22,6 +22,7 @@ func Run(fsys fs.FS) {
 		fs:         fsys,
 		rootFolder: rootFolder,
 		curFolder:  rootFolder,
+		byHash:     map[string][]*file{},
 		events:     events{p},
 	}
 
@@ -77,7 +78,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			incoming.parent = folder
 			folder.sorted = false
 		}
-		app.rootFolder.updateMetas()
+		if len(app.rootFolder.children) > 0 {
+			app.rootFolder.selected = app.rootFolder.children[0]
+		}
 
 	case fs.FileHashed:
 		file := app.findFile(parsePath(msg.Path))
