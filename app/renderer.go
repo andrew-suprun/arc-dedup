@@ -57,9 +57,7 @@ func (b *builder) renderBreadcrumbs() {
 
 	b.markPosition()
 	b.text(" Root")
-	b.setTarget(func(app *app) {
-		b.app.curFolder = b.app.rootFolder
-	})
+	b.setTarget(selectFolder{})
 
 	for i, name := range path {
 		b.text(" / ")
@@ -67,10 +65,7 @@ func (b *builder) renderBreadcrumbs() {
 		b.text(name)
 		selectPath := make([]string, i+1)
 		copy(selectPath, path[:i+1])
-		b.setTarget(func(app *app) {
-			folder := b.app.findFile(selectPath)
-			b.app.curFolder = folder
-		})
+		b.setTarget(selectFolder{path: selectPath})
 	}
 
 	b.newLine()
@@ -92,6 +87,7 @@ func (b *builder) renderFolder() {
 			b.setStyle(styleFile)
 			b.newLine()
 		} else {
+			b.markPosition()
 			file := folder.children[i+folder.offsetIdx]
 			if b.app.curFolder.selectedIdx == i+b.app.curFolder.offsetIdx {
 				if file.dups > 0 {
@@ -125,6 +121,7 @@ func (b *builder) renderFolder() {
 			b.text(file.modTime.Format(" 2006-01-02 15:04:05"))
 			b.text(formatSize(file.size))
 			b.text(" ")
+			b.setTarget(selectFile{idx: i + folder.offsetIdx})
 			b.newLine()
 		}
 	}
@@ -166,8 +163,8 @@ func (b *builder) markPosition() {
 	b.markX, b.markY = b.x, b.y
 }
 
-func (b *builder) setTarget(handle func(app *app)) {
-	b.app.targets = append(b.app.targets, target{x1: b.markX, x2: b.x, y1: b.markY, y2: b.y, handle: handle})
+func (b *builder) setTarget(cmd any) {
+	b.app.targets = append(b.app.targets, target{x1: b.markX, x2: b.x, y1: b.markY, y2: b.y, cmd: cmd})
 }
 
 func (b *builder) setStyle(style lipgloss.Style) {

@@ -4,6 +4,7 @@ import (
 	"dedup/fs"
 	"log"
 	"strings"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -118,7 +119,25 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.Action == tea.MouseActionPress && msg.Button == tea.MouseButtonLeft {
 			for _, target := range app.targets {
 				if msg.X >= target.x1 && msg.X <= target.x2 && msg.Y >= target.y1 && msg.Y <= target.y2 {
-					target.handle(app)
+					switch cmd := target.cmd.(type) {
+					case selectFolder:
+						app.curFolder = app.findFile(cmd.path)
+					case selectFile:
+						app.curFolder.selectedIdx = cmd.idx
+						file := app.curFolder.children[cmd.idx]
+						log.Printf("file %#v", file)
+						if file.folder != nil &&
+							app.lastX == msg.X && app.lastY == msg.Y &&
+							time.Since(app.lastClickTime).Milliseconds() < 500 {
+
+							log.Printf("selected %#v", file)
+							app.curFolder = file
+						}
+						app.lastClickTime = time.Now()
+						app.lastX = msg.X
+						app.lastY = msg.Y
+
+					}
 					break
 				}
 			}

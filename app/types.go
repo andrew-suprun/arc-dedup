@@ -24,6 +24,7 @@ type (
 		screenWidth   int
 		screenHeight  int
 		lastClickTime time.Time
+		lastX, lastY  int
 
 		events events
 	}
@@ -56,7 +57,15 @@ type (
 	target struct {
 		x1, y1 int
 		x2, y2 int
-		handle func(*app)
+		cmd    any
+	}
+
+	selectFolder struct {
+		path []string
+	}
+
+	selectFile struct {
+		idx int
 	}
 )
 
