@@ -20,8 +20,7 @@ type (
 		hashed      int
 		state       appState
 
-		folderTargets []folderTarget
-		sortTargets   []sortTarget
+		targets       []target
 		screenWidth   int
 		screenHeight  int
 		lastClickTime time.Time
@@ -54,16 +53,10 @@ type (
 
 	sortColumn int
 
-	folderTarget struct {
-		path   []string
-		offset int
-		width  int
-	}
-
-	sortTarget struct {
-		sortColumn
-		offset int
-		width  int
+	target struct {
+		x1, y1 int
+		x2, y2 int
+		handle func(*app)
 	}
 )
 

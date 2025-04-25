@@ -29,6 +29,7 @@ type builder struct {
 }
 
 func (app *app) render() string {
+	app.targets = app.targets[:0]
 	b := builder{app: app, builder: strings.Builder{}}
 
 	if app.screenWidth < 80 || app.screenHeight < 24 {
@@ -50,15 +51,26 @@ func (b *builder) renderTitle() {
 
 func (b *builder) renderBreadcrumbs() {
 	b.setStyle(styleBreadcrumbs)
-	b.app.folderTargets = b.app.folderTargets[:0]
+	b.app.targets = b.app.targets[:0]
 
 	path := b.app.curFolder.fullPath()
 
+	b.markPosition()
 	b.text(" Root")
+	b.setTarget(func(app *app) {
+		b.app.curFolder = b.app.rootFolder
+	})
 
-	for _, name := range path {
+	for i, name := range path {
 		b.text(" / ")
+		b.markPosition()
 		b.text(name)
+		selectPath := make([]string, i+1)
+		copy(selectPath, path[:i+1])
+		b.setTarget(func(app *app) {
+			folder := b.app.findFile(selectPath)
+			b.app.curFolder = folder
+		})
 	}
 
 	b.newLine()
@@ -154,7 +166,8 @@ func (b *builder) markPosition() {
 	b.markX, b.markY = b.x, b.y
 }
 
-func (b *builder) setTarget(func(app *app)) {
+func (b *builder) setTarget(handle func(app *app)) {
+	b.app.targets = append(b.app.targets, target{x1: b.markX, x2: b.x, y1: b.markY, y2: b.y, handle: handle})
 }
 
 func (b *builder) setStyle(style lipgloss.Style) {

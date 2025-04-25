@@ -114,6 +114,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "tab":
 		}
 
+	case tea.MouseMsg:
+		if msg.Action == tea.MouseActionPress && msg.Button == tea.MouseButtonLeft {
+			for _, target := range app.targets {
+				if msg.X >= target.x1 && msg.X <= target.x2 && msg.Y >= target.y1 && msg.Y <= target.y2 {
+					target.handle(app)
+					break
+				}
+			}
+		}
+
 	case fs.FileMetas:
 		for _, meta := range msg {
 			path, name := parseName(meta.Path)
