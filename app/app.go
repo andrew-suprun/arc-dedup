@@ -111,8 +111,27 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				break
 			}
 
-		case "enter":
 		case "tab":
+			file := app.curFolder.children[app.curFolder.selectedIdx]
+			if file.folder != nil {
+				break
+			}
+			files := app.byHash[file.hash]
+			if len(files) < 2 {
+				break
+			}
+			i := 0
+			for ; files[i] != file; i++ {
+			}
+			nextFile := files[(i+1)%len(files)]
+			app.curFolder = nextFile.parent
+			for idx, child := range app.curFolder.children {
+				if child == nextFile {
+					app.curFolder.selectedIdx = idx
+					break
+				}
+			}
+		case "enter":
 		}
 
 	case tea.MouseMsg:
