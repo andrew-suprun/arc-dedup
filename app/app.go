@@ -141,6 +141,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					break
 				}
 			}
+		} else if msg.Button == tea.MouseButtonWheelUp {
+			app.curFolder.offsetIdx--
+		} else if msg.Button == tea.MouseButtonWheelDown {
+			app.curFolder.offsetIdx++
 		}
 
 	case fs.FileMetas:

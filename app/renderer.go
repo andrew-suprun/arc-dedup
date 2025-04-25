@@ -39,6 +39,7 @@ func (app *app) render() string {
 	b.renderTitle()
 	b.renderBreadcrumbs()
 	b.renderFolder()
+	b.renderStatusLine()
 	return b.builder.String()
 }
 
@@ -125,6 +126,9 @@ func (b *builder) renderFolder() {
 			b.newLine()
 		}
 	}
+}
+
+func (b *builder) renderStatusLine() {
 	b.setStyle(styleArchive)
 	switch b.app.state {
 	case archiveScanning:
@@ -137,7 +141,11 @@ func (b *builder) renderFolder() {
 		b.setStyle(styleArchive)
 		b.text(" ")
 	case archiveReady:
-		b.text(" All Clear ")
+		if b.app.nDuplicates > 0 {
+			b.text(fmt.Sprintf(" Duplicates %d ", b.app.nDuplicates))
+		} else {
+			b.text(" All Clear ")
+		}
 		b.text(padRight("", b.app.screenWidth-b.x))
 	}
 }
