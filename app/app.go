@@ -52,6 +52,20 @@ func (m model) Init() tea.Cmd {
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	app := <-m
 	defer func() { m <- app }()
+	defer func() {
+		if app.curFolder.selectedIdx >= len(app.curFolder.children) {
+			app.curFolder.selectedIdx = len(app.curFolder.children) - 1
+		}
+		if app.curFolder.selectedIdx < 0 {
+			app.curFolder.selectedIdx = 0
+		}
+		if app.curFolder.offsetIdx >= len(app.curFolder.children)+4-app.screenHeight {
+			app.curFolder.offsetIdx = len(app.curFolder.children) + 4 - app.screenHeight
+		}
+		if app.curFolder.offsetIdx < 0 {
+			app.curFolder.offsetIdx = 0
+		}
+	}()
 
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
@@ -59,9 +73,45 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		app.screenWidth = msg.Width
 
 	case tea.KeyMsg:
+		log.Printf("key %q", msg.String())
 		switch msg.String() {
 		case "esc":
 			return m, tea.Quit
+		case "up":
+			app.curFolder.selectedIdx--
+
+		case "down":
+			app.curFolder.selectedIdx++
+
+		case "pgup":
+			app.curFolder.selectedIdx -= app.screenHeight - 4
+			app.curFolder.offsetIdx -= app.screenHeight - 4
+
+		case "pgdown":
+			app.curFolder.selectedIdx += app.screenHeight - 4
+			app.curFolder.offsetIdx += app.screenHeight - 4
+
+		case "home":
+			app.curFolder.selectedIdx = 0
+			app.curFolder.offsetIdx = 0
+
+		case "end":
+			app.curFolder.selectedIdx = len(app.curFolder.children) - 1
+			app.curFolder.offsetIdx = len(app.curFolder.children) + 4 - app.screenHeight
+
+		case "left":
+			if app.curFolder.parent != nil {
+				app.curFolder = app.curFolder.parent
+			}
+		case "right":
+			child := app.curFolder.children[app.curFolder.selectedIdx]
+			if child.folder != nil {
+				app.curFolder = child
+				break
+			}
+
+		case "enter":
+		case "tab":
 		}
 
 	case fs.FileMetas:
@@ -80,9 +130,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if meta.Hash == "" {
 				app.hashing++
 			}
-		}
-		if len(app.rootFolder.children) > 0 {
-			app.rootFolder.selected = app.rootFolder.children[0]
 		}
 		app.rootFolder.updateMetas()
 

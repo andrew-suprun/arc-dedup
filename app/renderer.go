@@ -75,13 +75,13 @@ func (b *builder) renderFolder() {
 	b.newLine()
 
 	folder := b.app.curFolder
-	b.setStyle(styleFile)
 	for i := range b.app.screenHeight - 4 {
 		if i+folder.offsetIdx >= len(folder.children) {
+			b.setStyle(styleFile)
 			b.newLine()
 		} else {
 			file := folder.children[i+folder.offsetIdx]
-			if b.app.curFolder.selected == file {
+			if b.app.curFolder.selectedIdx == i+b.app.curFolder.offsetIdx {
 				if file.dups > 0 {
 					b.setStyle(styleFileDupSelected)
 				} else {
@@ -177,13 +177,6 @@ func (b *builder) newLine() {
 	b.builder.WriteString(b.style.Render("\n"))
 	b.x = 0
 	b.y++
-}
-
-func (b *builder) skipTo(x int) {
-	for b.x < x {
-		b.builder.WriteString(b.style.Render(" "))
-		b.x++
-	}
 }
 
 func (b *builder) progressBar(done, size, width int) string {

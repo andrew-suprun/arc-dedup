@@ -43,7 +43,6 @@ type (
 
 	folder struct {
 		children      files
-		selected      *file
 		selectedIdx   int
 		offsetIdx     int
 		sortColumn    sortColumn
@@ -80,15 +79,6 @@ const (
 	sortBySize
 )
 
-func (app *app) getSelected() *file {
-	return app.curFolder.getSelected()
-}
-
-func (app *app) setSelected(file *file) {
-	app.curFolder = app.findFile(file.path())
-	app.curFolder.selected = file
-}
-
 func (f *file) String() string {
 	if f == nil {
 		return "<nil>"
@@ -120,27 +110,6 @@ func (f *file) findChild(name string) *file {
 		}
 	}
 	return nil
-}
-
-func (folder *file) getSelected() *file {
-	if folder.selectedIdx >= len(folder.children) {
-		folder.selectedIdx = len(folder.children) - 1
-	}
-	if folder.selectedIdx < 0 {
-		folder.selectedIdx = 0
-	}
-	if folder.selected != nil {
-		for i, child := range folder.children {
-			if child == folder.selected {
-				folder.selectedIdx = i
-			}
-		}
-	}
-	if len(folder.children) == 0 {
-		return nil
-	}
-	folder.selected = folder.children[folder.selectedIdx]
-	return folder.selected
 }
 
 func (parent *file) getChild(sub string) *file {
