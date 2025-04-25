@@ -77,9 +77,18 @@ func (b *builder) renderFolder() {
 	modified := "Date Modified" + b.app.curFolder.sortIndicator(sortByTime)
 	size := "Size" + b.app.curFolder.sortIndicator(sortBySize)
 	b.setStyle(styleFolderHeader)
+
+	b.markPosition()
 	b.text(padRight(document, b.app.screenWidth-39))
+	b.setTarget(sortCmd{sortByName})
+
+	b.markPosition()
 	b.text(padRight(modified, 20))
+	b.setTarget(sortCmd{sortByTime})
+
+	b.markPosition()
 	b.text(padLeft(size, 18))
+	b.setTarget(sortCmd{sortBySize})
 	b.newLine()
 
 	folder := b.app.curFolder

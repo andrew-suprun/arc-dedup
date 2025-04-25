@@ -75,7 +75,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		app.screenWidth = msg.Width
 
 	case tea.KeyMsg:
-		log.Printf("key %q", msg.String())
 		switch msg.String() {
 		case "esc":
 			return m, tea.Quit
@@ -163,21 +162,27 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					switch cmd := target.cmd.(type) {
 					case selectFolder:
 						app.curFolder = app.findFile(cmd.path)
+
 					case selectFile:
 						app.curFolder.selectedIdx = cmd.idx
 						file := app.curFolder.children[cmd.idx]
-						log.Printf("file %#v", file)
 						if file.folder != nil &&
 							app.lastX == msg.X && app.lastY == msg.Y &&
 							time.Since(app.lastClickTime).Milliseconds() < 500 {
 
-							log.Printf("selected %#v", file)
 							app.curFolder = file
 						}
 						app.lastClickTime = time.Now()
 						app.lastX = msg.X
 						app.lastY = msg.Y
 
+					case sortCmd:
+						if cmd.column == app.curFolder.sortColumn {
+							app.curFolder.sortAscending[cmd.column] = !app.curFolder.sortAscending[cmd.column]
+						} else {
+							app.curFolder.sortColumn = cmd.column
+						}
+						app.curFolder.sort()
 					}
 					break
 				}
@@ -200,12 +205,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			folder := app.getFile(path)
 			folder.children = append(folder.children, incoming)
 			incoming.parent = folder
-			folder.sorted = false
 			if meta.Hash == "" {
 				app.hashing++
 			}
 		}
 		app.rootFolder.updateMetas()
+		app.rootFolder.sortRec()
 
 	case fs.FileHashed:
 		file := app.findFile(parsePath(msg.Path))
@@ -214,7 +219,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		app.state = archiveHashing
 
 	case fs.ArchiveHashed:
-		log.Printf("got ArchiveHashed\n")
 		app.state = archiveReady
 		app.analyze()
 	}

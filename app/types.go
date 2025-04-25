@@ -47,7 +47,6 @@ type (
 		offsetIdx     int
 		sortColumn    sortColumn
 		sortAscending []bool
-		sorted        bool
 	}
 
 	appState int
@@ -66,6 +65,10 @@ type (
 
 	selectFile struct {
 		idx int
+	}
+
+	sortCmd struct {
+		column sortColumn
 	}
 )
 
@@ -125,7 +128,6 @@ func (parent *file) getChild(sub string) *file {
 			},
 		}
 		parent.children = append(parent.children, child)
-		parent.sorted = false
 	}
 	return child
 }
