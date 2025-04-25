@@ -139,7 +139,8 @@ func (app *app) analyze() {
 			dups[hash] = struct{}{}
 		}
 	}
-	for hash, files := range byHash {
+	for hash := range dups {
+		files := byHash[hash]
 		if _, ok := dups[hash]; ok {
 			app.byHash[hash] = files
 			for _, file := range files {
@@ -157,6 +158,7 @@ func (app *app) analyzeRec(byHash map[string][]*file, file *file) {
 			app.analyzeRec(byHash, child)
 		}
 	} else {
+		file.dups = 0
 		files := byHash[file.hash]
 		files = append(files, file)
 		byHash[file.hash] = files

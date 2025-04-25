@@ -9,7 +9,7 @@ type Events interface {
 type FS interface {
 	Root() string
 	Scan(events Events)
-	Remove(path string, events Events)
+	Remove(path string)
 }
 
 type FileMeta struct {

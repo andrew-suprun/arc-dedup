@@ -3,6 +3,7 @@ package app
 import (
 	"dedup/fs"
 	"log"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -132,6 +133,27 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			}
 		case "enter":
+			file := app.curFolder.children[app.curFolder.selectedIdx]
+			if file.folder != nil {
+				break
+			}
+			files := app.byHash[file.hash]
+			if len(files) < 2 {
+				break
+			}
+			for _, dup := range files {
+				if dup != file {
+					app.fs.Remove(filepath.Join(dup.fullPath()...))
+					app.deleteFile(dup)
+				}
+			}
+			for idx, child := range app.curFolder.children {
+				if child == file {
+					app.curFolder.selectedIdx = idx
+					break
+				}
+			}
+			app.analyze()
 		}
 
 	case tea.MouseMsg:

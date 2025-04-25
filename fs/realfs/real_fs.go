@@ -23,7 +23,7 @@ func (fsys *FS) Root() string {
 func (fsys *FS) Scan(events fs.Events) {
 }
 
-func (fsys *FS) Remove(path string, events fs.Events) {}
+func (fsys *FS) Remove(path string) {}
 
 func AbsPath(path string) (string, error) {
 	var err error

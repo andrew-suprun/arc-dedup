@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"dedup/fs"
 	"encoding/csv"
+	"log"
 	"os"
 	"slices"
 	"strconv"
@@ -26,7 +27,9 @@ func (fsys *FS) Scan(events fs.Events) {
 	go fsys.scan(events)
 }
 
-func (fsys *FS) Remove(path string, events fs.Events) {}
+func (fsys *FS) Remove(path string) {
+	log.Println("removed", path)
+}
 
 func (fsys *FS) scan(events fs.Events) {
 	time.Sleep(time.Second)
