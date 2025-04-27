@@ -40,6 +40,10 @@ func (fsys *FS) Root() string {
 	return fsys.root
 }
 
+func (fsys *FS) Scan(events fs.Events) {
+	go fsys.scan(events)
+}
+
 func (fsys *FS) Remove(path string) {
 	err := os.Remove(filepath.Join(fsys.root, path))
 	if err != nil {
